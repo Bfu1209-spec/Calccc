@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROK Material Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f4f0;
+  --card: #ebe9e3;
+  --input-bg: #ffffff;
+  --border: #d4d2cb;
+  --border-focus: #0c447c;
+  --text: #1f1e1c;
+  --text-2: #5f5e5a;
+  --text-3: #8a8880;
+  --green: #1e5c00;
+  --red: #7a1f1f;
+  --blue: #0c447c;
+  --blue-bg: #e3f0fb;
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #181816;
+    --card: #222220;
+    --input-bg: #2a2a28;
+    --border: #3a3a36;
+    --text: #f0efe9;
+    --text-2: #b0aea6;
+    --text-3: #807e78;
+    --green: #90c45a;
+    --red: #f09090;
+    --blue: #7ab4ea;
+    --blue-bg: #06284e;
+  }
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  padding: 20px 16px 80px;
+}
+.page { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 { font-size: 20px; font-weight: 600; }
+h2 { font-size: 15px; font-weight: 600; }
+.sub { color: var(--text-3); font-size: 12px; margin-top: 4px; }
+.section { display: flex; flex-direction: column; gap: 10px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; }
+.card { background: var(--card); border-radius: var(--radius); padding: 12px; }
+.card-title { font-weight: 500; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.grid5 label { display: block; font-size: 11px; color: var(--text-3); margin-bottom: 3px; }
+input[type=number], input[type=text] {
+  width: 100%; height: 34px; padding: 0 8px;
+  background: var(--input-bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; font-family: inherit;
+}
+input:focus { outline: none; border-color: var(--border-focus); }
+input[type=checkbox] { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--blue); }
+button {
+  background: var(--input-bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; font-family: inherit;
+  padding: 6px 12px; cursor: pointer;
+}
+button:active { opacity: 0.7; }
+.btn-del {
+  width: 28px; height: 28px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; line-height: 1; flex-shrink: 0;
+  color: var(--text-3);
+}
+.tbl-head {
+  display: grid; gap: 6px;
+  font-size: 11px; color: var(--text-3);
+  padding: 0 2px;
+}
+.tbl-row { display: grid; gap: 6px; align-items: center; }
+.eq-cols  { grid-template-columns: 20px 1fr 72px 72px 72px 28px; }
+.inc-cols { grid-template-columns: 20px 1fr 100px 28px; }
+.chest-cols { grid-template-columns: 1fr 90px 72px; }
+.divider { border: none; border-top: 1px solid var(--border); }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.metric { background: var(--card); border-radius: var(--radius); padding: 12px; }
+.metric .label { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+.metric .value { font-size: 22px; font-weight: 600; }
+.metric .unit { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.prog-row {
+  background: var(--card); border-radius: var(--radius);
+  padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+}
+.prog-row .name { font-size: 13px; }
+.prog-row .detail { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.ok { color: var(--green); font-weight: 600; }
+.bad { color: var(--red); font-weight: 600; }
+.time-grid { display: grid; grid-template-columns: 1fr 80px 80px 60px; gap: 6px; font-size: 13px; }
+.time-grid.head { font-size: 11px; color: var(--text-3); }
+.time-total { font-weight: 600; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
+.accent-box { background: var(--blue-bg); border-radius: var(--radius); padding: 12px 14px; }
+.accent-box .days { font-size: 22px; font-weight: 700; color: var(--blue); }
+.accent-box .desc { font-size: 12px; color: var(--blue); margin-top: 2px; }
+#save-note { font-size: 11px; color: var(--text-3); min-height: 14px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div>
+    <h1>ROK Material Tracker</h1>
+    <p class="sub">All data saved to this browser automatically.</p>
+    <p id="save-note" style="margin-top:4px;"></p>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="section">
+    <h2>Current Materials</h2>
+    <p class="sub">Enter quantity by rarity. Gold-equiv shown per material.</p>
+    <div id="mat-leather" class="card"></div>
+    <div id="mat-stone"   class="card"></div>
+    <div id="mat-wood"    class="card"></div>
+  </div>
+
+  <!-- EQUIPMENT -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Equipment Shopping List</h2>
+      <button id="btn-add-eq">+ Add item</button>
+    </div>
+    <p class="sub">Negative = consumed, positive = refunded. Uncheck to skip.</p>
+    <div class="tbl-head tbl-row eq-cols">
+      <span></span><span>Item</span><span>Leather</span><span>Stone</span><span>Wood</span><span></span>
+    </div>
+    <div id="eq-table"></div>
+  </div>
+
+  <!-- CHESTS -->
+  <div class="section">
+    <h2>Choice Chests</h2>
+    <div class="tbl-head tbl-row chest-cols">
+      <span>Chest</span><span>Amount</span><span>Rate</span>
+    </div>
+    <div id="chest-table"></div>
+  </div>
+
+  <!-- INCOME -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Passive Income</h2>
+      <button id="btn-add-inc">+ Add method</button>
+    </div>
+    <p class="sub">Gray chests earned per day. Uncheck to exclude.</p>
+    <div class="tbl-head tbl-row inc-cols">
+      <span></span><span>Method</span><span>Gray/day</span><span></span>
+    </div>
+    <div id="inc-table"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- PROGRESS -->
+  <div class="section">
+    <h2>Progress</h2>
+    <div id="prog-leather" class="prog-row"></div>
+    <div id="prog-stone"   class="prog-row"></div>
+    <div id="prog-wood"    class="prog-row"></div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="label">Still needed</div>
+      <div class="value" id="m-needed">—</div>
+      <div class="unit">gold-equiv</div>
+    </div>
+    <div class="metric">
+      <div class="label">Chests available</div>
+      <div class="value" id="m-chests">—</div>
+      <div class="unit">gold-equiv</div>
+    </div>
+    <div class="metric">
+      <div class="label">After chests</div>
+      <div class="value" id="m-after">—</div>
+      <div class="unit">gold-equiv</div>
+    </div>
+  </div>
+
+  <!-- TIME -->
+  <div class="section">
+    <h2>Time to Finish</h2>
+    <div class="time-grid head">
+      <span>Method</span><span>Gold/day</span><span>Gold/wk</span><span>Share</span>
+    </div>
+    <div id="time-rows"></div>
+    <div class="accent-box" id="days-box">
+      <div class="days" id="days-val">—</div>
+      <div class="desc" id="days-desc">days remaining from passive income</div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;">
+    <button id="btn-reset">Reset to defaults</button>
+  </div>
+
+</div>
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+const SK = "rok-v4";
+const RATES = { gold:1, purple:0.25, blue:0.06254545, green:0.01566667, gray:0.00390523 };
+const TIERS = ["gold","purple","blue","green","gray"];
+const TLBL  = { gold:"Gold", purple:"Purple", blue:"Blue", green:"Green", gray:"Gray" };
+const MATS  = [
+  { id:"leather", label:"Leather" },
+  { id:"stone",   label:"Stone"   },
+  { id:"wood",    label:"Wood (Ebony)" }
+];
+const CHESTS = [
+  { id:"gold",   label:"Gold",   rate:1         },
+  { id:"purple", label:"Purple", rate:0.25      },
+  { id:"blue",   label:"Blue",   rate:0.06254545 },
+  { id:"green",  label:"Green",  rate:0.01566667 },
+  { id:"gray",   label:"Gray",   rate:0.00390523 }
+];
+
+// ─── Default state ───────────────────────────────────────────────────────────
+function defaults() {
+  return {
+    mats: {
+      leather: { gold:32, purple:0, blue:0, green:0, gray:0 },
+      stone:   { gold:11, purple:0, blue:0, green:0, gray:0 },
+      wood:    { gold:30, purple:0, blue:0, green:0, gray:0 }
+    },
+    chests: { gold:18, purple:58, blue:110, green:90, gray:1224 },
+    eq: [
+      { id:"e1", name:"Heart of the saint",    leather:17,   stone:3.75,  wood:3.75,  on:true },
+      { id:"e2", name:"Flame treads",           leather:-2.5, stone:0,     wood:-7.5,  on:true },
+      { id:"e3", name:"Dragon's breath gloves", leather:0,    stone:-10,   wood:-30,   on:true },
+      { id:"e4", name:"Leadership legs",        leather:-20,  stone:-20,   wood:-20,   on:true },
+      { id:"e5", name:"Ancient gloves",         leather:0,    stone:15,    wood:5,     on:true },
+      { id:"e6", name:"Iconic infantry helm",   leather:-5,   stone:-20,   wood:0,     on:true },
+      { id:"e7", name:"Iconic infantry legs",   leather:0,    stone:-15,   wood:0,     on:true }
+    ],
+    inc: [
+      { id:"i1", name:"Mat production", rate:120, on:true }
+    ]
+  };
+}
+
+// ─── State & persistence ─────────────────────────────────────────────────────
+let S = defaults();
+let _saveTimer, _noteTimer, _uid = 200;
+function uid() { return "x" + (++_uid); }
+
+function load() {
+  try { const r = localStorage.getItem(SK); if (r) S = JSON.parse(r); } catch(e) {}
+}
+function save() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    try { localStorage.setItem(SK, JSON.stringify(S)); note("Saved"); } catch(e) { note("Save failed"); }
+  }, 350);
+}
+function note(t) {
+  const el = document.getElementById("save-note");
+  el.textContent = t;
+  clearTimeout(_noteTimer);
+  _noteTimer = setTimeout(() => { el.textContent = ""; }, 1600);
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function f2(n) { return (Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function matGE(id) { return TIERS.reduce((s,t) => s + (S.mats[id][t]||0)*RATES[t], 0); }
+function chestGE()  { return CHESTS.reduce((s,c) => s + (S.chests[c.id]||0)*c.rate, 0); }
+
+// ─── Build material cards (once) ─────────────────────────────────────────────
+function buildMatCards() {
+  MATS.forEach(m => {
+    const el = document.getElementById("mat-"+m.id);
+    el.innerHTML = `
+      <div class="card-title">
+        <span>${m.label}</span>
+        <span style="font-size:12px;color:var(--text-2);">Gold-equiv: <b id="ge-${m.id}">0.00</b></span>
+      </div>
+      <div class="grid5">
+        ${TIERS.map(t => `
+          <div>
+            <label>${TLBL[t]}</label>
+            <input type="number" id="mat-${m.id}-${t}" value="${S.mats[m.id][t]||0}" step="1" min="0"
+              onchange="S.mats['${m.id}']['${t}']=parseFloat(this.value)||0; recalc(); save();" />
+          </div>`).join("")}
+      </div>`;
+  });
+}
+
+// ─── Render equipment table ───────────────────────────────────────────────────
+function renderEq() {
+  const el = document.getElementById("eq-table");
+  el.innerHTML = "";
+  S.eq.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "tbl-row eq-cols";
+    row.style.marginBottom = "6px";
+    row.innerHTML = `
+      <input type="checkbox" ${item.on?"checked":""} onchange="S.eq.find(x=>x.id==='${item.id}').on=this.checked;recalc();save();" />
+      <input type="text" value="${item.name}" onchange="S.eq.find(x=>x.id==='${item.id}').name=this.value;save();" />
+      <input type="number" value="${item.leather}" step="0.25"
+        onchange="S.eq.find(x=>x.id==='${item.id}').leather=parseFloat(this.value)||0;recalc();save();" />
+      <input type="number" value="${item.stone}" step="0.25"
+        onchange="S.eq.find(x=>x.id==='${item.id}').stone=parseFloat(this.value)||0;recalc();save();" />
+      <input type="number" value="${item.wood}" step="0.25"
+        onchange="S.eq.find(x=>x.id==='${item.id}').wood=parseFloat(this.value)||0;recalc();save();" />
+      <button class="btn-del" onclick="delEq('${item.id}')">&times;</button>`;
+    el.appendChild(row);
+  });
+}
+
+function delEq(id) {
+  S.eq = S.eq.filter(x => x.id !== id);
+  renderEq();
+  recalc();
+  save();
+}
+
+document.getElementById("btn-add-eq").onclick = () => {
+  S.eq.push({ id:uid(), name:"New item", leather:0, stone:0, wood:0, on:true });
+  renderEq();
+  recalc();
+  save();
+};
+
+// ─── Render chest table (once) ───────────────────────────────────────────────
+function buildChestTable() {
+  const el = document.getElementById("chest-table");
+  CHESTS.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "tbl-row chest-cols";
+    row.style.marginBottom = "6px";
+    row.innerHTML = `
+      <span>${c.label}</span>
+      <input type="number" id="chest-${c.id}" value="${S.chests[c.id]||0}" step="1" min="0"
+        onchange="S.chests['${c.id}']=parseFloat(this.value)||0;recalc();save();" />
+      <span style="color:var(--text-3);font-size:12px;padding-left:4px;">${c.rate.toFixed(4)}</span>`;
+    el.appendChild(row);
+  });
+}
+
+// ─── Render income table ─────────────────────────────────────────────────────
+function renderInc() {
+  const el = document.getElementById("inc-table");
+  el.innerHTML = "";
+  S.inc.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "tbl-row inc-cols";
+    row.style.marginBottom = "6px";
+    row.innerHTML = `
+      <input type="checkbox" ${item.on?"checked":""} onchange="S.inc.find(x=>x.id==='${item.id}').on=this.checked;recalc();save();" />
+      <input type="text" value="${item.name}" onchange="S.inc.find(x=>x.id==='${item.id}').name=this.value;save();" />
+      <input type="number" value="${item.rate}" step="1" min="0"
+        onchange="S.inc.find(x=>x.id==='${item.id}').rate=parseFloat(this.value)||0;recalc();save();" />
+      <button class="btn-del" onclick="delInc('${item.id}')">&times;</button>`;
+    el.appendChild(row);
+  });
+}
+
+function delInc(id) {
+  S.inc = S.inc.filter(x => x.id !== id);
+  renderInc();
+  recalc();
+  save();
+}
+
+document.getElementById("btn-add-inc").onclick = () => {
+  S.inc.push({ id:uid(), name:"New method", rate:0, on:true });
+  renderInc();
+  recalc();
+  save();
+};
+
+// ─── Reset ───────────────────────────────────────────────────────────────────
+document.getElementById("btn-reset").onclick = () => {
+  if (!confirm("Reset everything to defaults? Cannot be undone.")) return;
+  S = defaults();
+  // Refresh mat inputs
+  MATS.forEach(m => TIERS.forEach(t => {
+    const inp = document.getElementById("mat-"+m.id+"-"+t);
+    if (inp) inp.value = S.mats[m.id][t];
+  }));
+  // Refresh chest inputs
+  CHESTS.forEach(c => {
+    const inp = document.getElementById("chest-"+c.id);
+    if (inp) inp.value = S.chests[c.id];
+  });
+  renderEq();
+  renderInc();
+  recalc();
+  save();
+};
+
+// ─── Recalc ──────────────────────────────────────────────────────────────────
+function recalc() {
+  // Gold-equiv per material
+  MATS.forEach(m => {
+    const ge = matGE(m.id);
+    document.getElementById("ge-"+m.id).textContent = f2(ge);
+  });
+
+  // Equipment needed (negated signed sum)
+  const sum = { leather:0, stone:0, wood:0 };
+  S.eq.forEach(item => {
+    if (!item.on) return;
+    sum.leather += item.leather||0;
+    sum.stone   += item.stone  ||0;
+    sum.wood    += item.wood   ||0;
+  });
+  const needed = { leather:-sum.leather, stone:-sum.stone, wood:-sum.wood };
+
+  // Progress rows
+  let totalNeeded = 0;
+  MATS.forEach(m => {
+    const need = needed[m.id];
+    const have = matGE(m.id);
+    const gap  = Math.max(0, need - have);
+    const extra= Math.max(0, have - need);
+    totalNeeded += gap;
+    const ok = gap <= 0;
+    const el = document.getElementById("prog-"+m.id);
+    el.innerHTML = `
+      <div>
+        <div class="name">${m.label}</div>
+        <div class="detail">need ${f2(need)} · have ${f2(have)}</div>
+      </div>
+      <div class="${ok?"ok":"bad"}">${ok ? "✓ +"+f2(extra)+" surplus" : f2(gap)+" needed"}</div>`;
+  });
+
+  // Metrics
+  const cge = chestGE();
+  const afterC = Math.max(0, totalNeeded - cge);
+  document.getElementById("m-needed").textContent = f2(totalNeeded);
+  document.getElementById("m-chests").textContent = f2(cge);
+  document.getElementById("m-after" ).textContent = f2(afterC);
+
+  // Income / time
+  let totalGpd = 0;
+  const rows = S.inc.map(item => {
+    const gpd = item.on ? (item.rate||0) * RATES.gray : 0;
+    if (item.on) totalGpd += gpd;
+    return { name:item.name, gpd, on:item.on };
+  });
+
+  const timeEl = document.getElementById("time-rows");
+  timeEl.innerHTML = "";
+  rows.forEach(r => {
+    const share = totalGpd > 0 ? (r.gpd/totalGpd*100) : 0;
+    const div = document.createElement("div");
+    div.className = "time-grid";
+    div.style.opacity = r.on ? "1" : "0.45";
+    div.innerHTML = `<span>${r.name}</span><span>${f2(r.gpd)}</span><span>${f2(r.gpd*7)}</span><span>${f2(share)}%</span>`;
+    timeEl.appendChild(div);
+  });
+  const tot = document.createElement("div");
+  tot.className = "time-grid time-total";
+  tot.innerHTML = `<span>Total passive</span><span>${f2(totalGpd)}</span><span>${f2(totalGpd*7)}</span><span>100%</span>`;
+  timeEl.appendChild(tot);
+
+  const dWith    = totalGpd > 0 ? afterC    / totalGpd : Infinity;
+  const dWithout = totalGpd > 0 ? totalNeeded / totalGpd : Infinity;
+  document.getElementById("days-val").textContent = Number.isFinite(dWith) ? f2(dWith) : "—";
+  document.getElementById("days-desc").textContent = Number.isFinite(dWith)
+    ? `days to go (passive only, chests spent) · ${f2(dWithout)} days without opening chests`
+    : "Add a passive income method to estimate";
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+load();
+buildMatCards();
+buildChestTable();
+renderEq();
+renderInc();
+recalc();
+</script>
+</body>
+</html>
